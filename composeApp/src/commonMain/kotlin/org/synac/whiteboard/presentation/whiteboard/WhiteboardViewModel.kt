@@ -5,19 +5,34 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.synac.whiteboard.domain.model.DrawingTool
 import org.synac.whiteboard.domain.model.DrawnPath
+import org.synac.whiteboard.domain.repository.PathRepository
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-class WhiteboardViewModel : ViewModel() {
+class WhiteboardViewModel(
+    private val pathRepository: PathRepository
+) : ViewModel() {
 
     private val _state = MutableStateFlow(WhiteboardState())
-    val state = _state.asStateFlow()
+    val state = combine(
+        _state,
+        pathRepository.getAllPaths()
+    ) { state, paths ->
+        state.copy(paths = paths)
+    }.stateIn(
+        scope = viewModelScope,
+        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+        initialValue = WhiteboardState()
+    )
 
     fun onEvent(event: WhiteboardEvent) {
         when (event) {
@@ -32,11 +47,11 @@ class WhiteboardViewModel : ViewModel() {
             }
 
             WhiteboardEvent.FinishDrawing -> {
+                state.value.currentPath?.let { drawnPath ->
+                    insertPath(drawnPath)
+                }
                 _state.update {
-                    it.copy(
-                        paths = it.paths + (state.value.currentPath ?: return),
-                        currentPath = null
-                    )
+                    it.copy(currentPath = null)
                 }
             }
 
@@ -52,6 +67,12 @@ class WhiteboardViewModel : ViewModel() {
                     it.copy(isDrawingToolsCardVisible = true)
                 }
             }
+        }
+    }
+
+    private fun insertPath(path: DrawnPath) {
+        viewModelScope.launch {
+            pathRepository.upsertPath(path)
         }
     }
 
