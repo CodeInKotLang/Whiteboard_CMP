@@ -11,15 +11,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
-import org.synac.whiteboard.domain.model.DrawingTool
+import org.synac.whiteboard.presentation.util.UiType
+import org.synac.whiteboard.presentation.util.getUiType
+import org.synac.whiteboard.presentation.util.rememberScreenSizeSize
 import org.synac.whiteboard.presentation.whiteboard.component.DrawingToolFAB
-import org.synac.whiteboard.presentation.whiteboard.component.DrawingToolsCard
-import org.synac.whiteboard.presentation.whiteboard.component.TopBar
+import org.synac.whiteboard.presentation.whiteboard.component.DrawingToolsCardHorizontal
+import org.synac.whiteboard.presentation.whiteboard.component.DrawingToolsCardVertical
+import org.synac.whiteboard.presentation.whiteboard.component.TopBarHorizontal
+import org.synac.whiteboard.presentation.whiteboard.component.TopBarVertical
 
 @Composable
 fun WhiteboardScreen(
@@ -28,45 +30,82 @@ fun WhiteboardScreen(
     onEvent: (WhiteboardEvent) -> Unit
 ) {
 
+    val screenSize = rememberScreenSizeSize()
+    val uiType = screenSize.getUiType()
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        DrawingCanvas(
-            modifier = Modifier.fillMaxSize(),
-            state = state,
-            onEvent = onEvent
-        )
-        TopBar(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(20.dp),
-            onHomeIconClick = {
+        when (uiType) {
+            UiType.COMPACT -> {
+                DrawingCanvas(
+                    modifier = Modifier.fillMaxSize(),
+                    state = state,
+                    onEvent = onEvent
+                )
+                TopBarHorizontal(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(20.dp),
+                    onHomeIconClick = {},
+                    onUndoIconClick = {},
+                    onRedoIconClick = {},
+                    onMenuIconClick = {}
+                )
+                DrawingToolFAB(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(20.dp),
+                    isVisible = !state.isDrawingToolsCardVisible,
+                    selectedTool = state.selectedTool,
+                    onClick = { onEvent(WhiteboardEvent.OnFABClick) }
+                )
+                DrawingToolsCardHorizontal(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(20.dp),
+                    isVisible = state.isDrawingToolsCardVisible,
+                    selectedTool = state.selectedTool,
+                    onToolClick = { onEvent(WhiteboardEvent.OnDrawingToolSelected(it)) },
+                    onCloseIconClick = { onEvent(WhiteboardEvent.OnDrawingToolsCardClose) }
+                )
+            }
 
-            },
-            onUndoIconClick = { },
-            onRedoIconClick = { },
-            onStrokeWidthClick = { },
-            onDrawingColorClick = { },
-            onBackgroundColorClick = { },
-            onSettingsClick = {}
-        )
-        DrawingToolFAB(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(20.dp),
-            isVisible = !state.isDrawingToolsCardVisible,
-            selectedTool = state.selectedTool,
-            onClick = { onEvent(WhiteboardEvent.OnFABClick) }
-        )
-        DrawingToolsCard(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(20.dp),
-            isVisible = state.isDrawingToolsCardVisible,
-            selectedTool = state.selectedTool,
-            onToolClick = { onEvent(WhiteboardEvent.OnDrawingToolSelected(it)) },
-            onCloseIconClick = { onEvent(WhiteboardEvent.OnDrawingToolsCardClose) }
-        )
+            else -> {
+                DrawingCanvas(
+                    modifier = Modifier.fillMaxSize(),
+                    state = state,
+                    onEvent = onEvent
+                )
+                TopBarVertical(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(20.dp),
+                    onHomeIconClick = {},
+                    onUndoIconClick = {},
+                    onRedoIconClick = {},
+                    onMenuIconClick = {}
+                )
+                DrawingToolFAB(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(20.dp),
+                    isVisible = !state.isDrawingToolsCardVisible,
+                    selectedTool = state.selectedTool,
+                    onClick = { onEvent(WhiteboardEvent.OnFABClick) }
+                )
+                DrawingToolsCardVertical(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(20.dp),
+                    isVisible = state.isDrawingToolsCardVisible,
+                    selectedTool = state.selectedTool,
+                    onToolClick = { onEvent(WhiteboardEvent.OnDrawingToolSelected(it)) },
+                    onCloseIconClick = { onEvent(WhiteboardEvent.OnDrawingToolsCardClose) }
+                )
+            }
+        }
+
     }
 }
 
@@ -96,44 +135,18 @@ private fun DrawingCanvas(
             }
     ) {
         state.paths.forEach { drawnPath ->
-            val pathEffect = if (drawnPath.drawingTool == DrawingTool.LINE_DOTTED) {
-                PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
-            } else null
-
-            val drawnStyle = when (drawnPath.drawingTool) {
-                DrawingTool.CIRCLE_FILLED, DrawingTool.RECTANGLE_FILLED, DrawingTool.TRIANGLE_FILLED -> {
-                    Fill
-                }
-                else -> {
-                    Stroke(width = 10f, pathEffect = pathEffect)
-                }
-            }
-
             drawPath(
                 path = drawnPath.path,
                 color = Color.Black,
-                style = drawnStyle
+                style = Stroke(width = 10f)
             )
         }
 
         state.currentPath?.let { drawnPath ->
-            val pathEffect = if (drawnPath.drawingTool == DrawingTool.LINE_DOTTED) {
-                PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
-            } else null
-
-            val drawnStyle = when (drawnPath.drawingTool) {
-                DrawingTool.CIRCLE_FILLED, DrawingTool.RECTANGLE_FILLED, DrawingTool.TRIANGLE_FILLED -> {
-                    Fill
-                }
-                else -> {
-                    Stroke(width = 10f, pathEffect = pathEffect)
-                }
-            }
-
             drawPath(
                 path = drawnPath.path,
                 color = Color.Black,
-                style = drawnStyle
+                style = Stroke(width = 10f)
             )
         }
     }

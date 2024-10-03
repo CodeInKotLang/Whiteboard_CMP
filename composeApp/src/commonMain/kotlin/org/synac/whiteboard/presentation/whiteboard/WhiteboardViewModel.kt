@@ -85,23 +85,23 @@ class WhiteboardViewModel(
                 createFreehandPath(start = startOffset, end = offset)
             }
 
-            DrawingTool.LINE_PLAIN, DrawingTool.LINE_DOTTED -> {
+            DrawingTool.LINE -> {
                 createLinePath(start = startOffset, end = offset)
             }
 
-            DrawingTool.ARROW_ONE_SIDED, DrawingTool.ARROW_TWO_SIDED -> {
+            DrawingTool.ARROW -> {
                 null
             }
 
-            DrawingTool.RECTANGLE_OUTLINE, DrawingTool.RECTANGLE_FILLED -> {
+            DrawingTool.RECTANGLE -> {
                 createRectanglePath(start = startOffset, end = offset)
             }
 
-            DrawingTool.CIRCLE_OUTLINE, DrawingTool.CIRCLE_FILLED -> {
+            DrawingTool.CIRCLE -> {
                 createCirclePath(start = startOffset, end = offset)
             }
 
-            DrawingTool.TRIANGLE_OUTLINE, DrawingTool.TRIANGLE_FILLED -> {
+            DrawingTool.TRIANGLE -> {
                 createTrianglePath(start = startOffset, end = offset)
             }
         }

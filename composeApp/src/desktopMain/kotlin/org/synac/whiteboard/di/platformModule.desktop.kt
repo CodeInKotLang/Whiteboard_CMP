@@ -1,8 +1,8 @@
 package org.synac.whiteboard.di
 
 import org.koin.dsl.module
-import org.synac.whiteboard.data.local.getRoomDatabase
+import org.synac.whiteboard.data.local.getRoomDatabaseBuilder
 
-actual fun platformModule() = module {
-    single { getRoomDatabase() }
+actual val platformModule = module {
+    single { getRoomDatabaseBuilder() }
 }

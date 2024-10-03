@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -29,7 +30,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.synac.whiteboard.domain.model.DrawingTool
 
 @Composable
-fun DrawingToolsCard(
+fun DrawingToolsCardHorizontal(
     modifier: Modifier = Modifier,
     isVisible: Boolean,
     selectedTool: DrawingTool,
@@ -44,13 +45,57 @@ fun DrawingToolsCard(
     ) {
         ElevatedCard {
             Row(
-                modifier = Modifier.padding(10.dp),
+                modifier = Modifier.padding(5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 LazyRow(
                     modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalAlignment = Alignment.CenterVertically
+                ) {
+                    items(DrawingTool.entries) { drawingTool ->
+                        DrawingToolItem(
+                            drawingTool = drawingTool,
+                            isSelected = selectedTool == drawingTool,
+                            onToolClick = { onToolClick(drawingTool) }
+                        )
+                    }
+                }
+                FilledIconButton(onClick = { onCloseIconClick() }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        modifier = Modifier.size(25.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DrawingToolsCardVertical(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean,
+    selectedTool: DrawingTool,
+    onToolClick: (DrawingTool) -> Unit,
+    onCloseIconClick: () -> Unit
+) {
+    AnimatedVisibility(
+        modifier = modifier,
+        visible = isVisible,
+        enter = slideInVertically(tween(durationMillis = 500)) { h -> h },
+        exit = slideOutVertically(tween(durationMillis = 500)) { h -> h }
+    ) {
+        ElevatedCard {
+            Column(
+                modifier = Modifier.padding(5.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(DrawingTool.entries) { drawingTool ->
                         DrawingToolItem(
@@ -88,7 +133,7 @@ private fun DrawingToolItem(
     ) {
         IconButton(onClick = { onToolClick() }) {
             Icon(
-                modifier = Modifier.size(25.dp),
+                modifier = Modifier.size(20.dp),
                 painter = painterResource(drawingTool.res),
                 contentDescription = drawingTool.name,
                 tint = if (imageIcons.contains(drawingTool)) {
@@ -100,7 +145,7 @@ private fun DrawingToolItem(
             Box(
                 modifier = Modifier
                     .background(LocalContentColor.current)
-                    .size(25.dp, 1.dp)
+                    .size(20.dp, 1.dp)
             )
         }
     }

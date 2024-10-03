@@ -10,7 +10,7 @@ import org.synac.whiteboard.data.local.entity.PathEntity
 
 @Database(
     entities = [PathEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @ConstructedBy(AppDatabaseConstructor::class)

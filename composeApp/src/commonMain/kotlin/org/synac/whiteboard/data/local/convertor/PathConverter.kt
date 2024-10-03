@@ -34,7 +34,7 @@ private fun serializePath(path: Path): String {
         }
         distance += 5f
     }
-    return pathStringBuilder.toString()
+    return pathStringBuilder.toString().trim()
 }
 
 private fun deserializePath(pathString: String): Path {
