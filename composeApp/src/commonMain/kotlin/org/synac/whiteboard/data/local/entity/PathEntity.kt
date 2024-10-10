@@ -11,5 +11,9 @@ data class PathEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long? = null,
     val drawingTool: DrawingTool,
-    val path: Path
+    val path: Path,
+    val strokeWidth: Float,
+    val strokeColor: Int,
+    val backgroundColor: Int,
+    val opacity: Float
 )

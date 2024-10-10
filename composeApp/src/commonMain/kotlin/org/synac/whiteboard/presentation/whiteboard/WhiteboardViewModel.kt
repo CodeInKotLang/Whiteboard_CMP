@@ -3,6 +3,7 @@ package org.synac.whiteboard.presentation.whiteboard
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,8 +16,6 @@ import org.synac.whiteboard.domain.model.DrawingTool
 import org.synac.whiteboard.domain.model.DrawnPath
 import org.synac.whiteboard.domain.repository.PathRepository
 import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 class WhiteboardViewModel(
     private val pathRepository: PathRepository
@@ -55,17 +54,46 @@ class WhiteboardViewModel(
                 }
             }
 
-            WhiteboardEvent.OnDrawingToolsCardClose -> {}
+            WhiteboardEvent.OnDrawingToolsCardClose -> {
+                _state.update { it.copy(isDrawingToolsCardVisible = false) }
+            }
+
             is WhiteboardEvent.OnDrawingToolSelected -> {
-                _state.update {
-                    it.copy(selectedTool = event.tool)
+                when(event.tool) {
+                    DrawingTool.RECTANGLE, DrawingTool.CIRCLE, DrawingTool.TRIANGLE -> {
+                        _state.update {
+                            it.copy(selectedTool = event.tool)
+                        }
+                    }
+                    else -> {
+                        _state.update {
+                            it.copy(
+                                selectedTool = event.tool,
+                                backgroundColor = Color.Transparent
+                            )
+                        }
+                    }
                 }
             }
 
             WhiteboardEvent.OnFABClick -> {
-                _state.update {
-                    it.copy(isDrawingToolsCardVisible = true)
-                }
+                _state.update { it.copy(isDrawingToolsCardVisible = true) }
+            }
+
+            is WhiteboardEvent.BackgroundColorChange -> {
+                _state.update { it.copy(backgroundColor = event.color) }
+            }
+
+            is WhiteboardEvent.OpacitySliderValueChange -> {
+                _state.update { it.copy(opacity = event.opacity) }
+            }
+
+            is WhiteboardEvent.StrokeColorChange -> {
+                _state.update { it.copy(strokeColor = event.color) }
+            }
+
+            is WhiteboardEvent.StrokeSliderValueChange -> {
+                _state.update { it.copy(strokeWidth = event.strokeWidth) }
             }
         }
     }
@@ -111,7 +139,11 @@ class WhiteboardViewModel(
                 it.copy(
                     currentPath = DrawnPath(
                         path = path,
-                        drawingTool = state.value.selectedTool
+                        drawingTool = state.value.selectedTool,
+                        strokeColor = state.value.strokeColor,
+                        backgroundColor = state.value.backgroundColor,
+                        opacity = state.value.opacity,
+                        strokeWidth = state.value.strokeWidth
                     )
                 )
             }
@@ -144,9 +176,10 @@ class WhiteboardViewModel(
     }
 
     private fun createCirclePath(start: Offset, end: Offset): Path {
-        val radius = sqrt((end.x - start.x).pow(2) + (end.y - start.y).pow(2))
+        val width = abs(end.x - start.x)
+        val height = abs(end.y - start.y)
         return Path().apply {
-            addOval(Rect(center = start, radius = radius))
+            addOval(Rect(offset = start, size = Size(width = width, height = height)))
         }
     }
 

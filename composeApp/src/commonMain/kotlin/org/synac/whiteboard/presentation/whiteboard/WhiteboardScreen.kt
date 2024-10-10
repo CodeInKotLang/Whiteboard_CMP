@@ -4,19 +4,36 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import org.synac.whiteboard.presentation.theme.defaultDrawingColors
 import org.synac.whiteboard.presentation.util.UiType
 import org.synac.whiteboard.presentation.util.getUiType
 import org.synac.whiteboard.presentation.util.rememberScreenSizeSize
+import org.synac.whiteboard.presentation.whiteboard.component.CommandPaletteCard
+import org.synac.whiteboard.presentation.whiteboard.component.CommandPaletteDrawerContent
 import org.synac.whiteboard.presentation.whiteboard.component.DrawingToolFAB
 import org.synac.whiteboard.presentation.whiteboard.component.DrawingToolsCardHorizontal
 import org.synac.whiteboard.presentation.whiteboard.component.DrawingToolsCardVertical
@@ -33,42 +50,77 @@ fun WhiteboardScreen(
     val screenSize = rememberScreenSizeSize()
     val uiType = screenSize.getUiType()
 
+    val scope = rememberCoroutineScope()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+    var isCommandPaletteOpen by rememberSaveable { mutableStateOf(false) }
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
         when (uiType) {
             UiType.COMPACT -> {
-                DrawingCanvas(
-                    modifier = Modifier.fillMaxSize(),
-                    state = state,
-                    onEvent = onEvent
-                )
-                TopBarHorizontal(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(20.dp),
-                    onHomeIconClick = {},
-                    onUndoIconClick = {},
-                    onRedoIconClick = {},
-                    onMenuIconClick = {}
-                )
-                DrawingToolFAB(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(20.dp),
-                    isVisible = !state.isDrawingToolsCardVisible,
-                    selectedTool = state.selectedTool,
-                    onClick = { onEvent(WhiteboardEvent.OnFABClick) }
-                )
-                DrawingToolsCardHorizontal(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(20.dp),
-                    isVisible = state.isDrawingToolsCardVisible,
-                    selectedTool = state.selectedTool,
-                    onToolClick = { onEvent(WhiteboardEvent.OnDrawingToolSelected(it)) },
-                    onCloseIconClick = { onEvent(WhiteboardEvent.OnDrawingToolsCardClose) }
-                )
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        CommandPaletteDrawerContent(
+                            onCloseIconClick = { scope.launch { drawerState.close() } },
+                            selectedDrawingTool = state.selectedTool,
+                            strokeColors = defaultDrawingColors,
+                            selectedStrokeColor = state.strokeColor,
+                            onStrokeColorChange = { onEvent(WhiteboardEvent.StrokeColorChange(it)) },
+                            backgroundColors = defaultDrawingColors,
+                            selectedBackgroundColor = state.backgroundColor,
+                            onBackgroundColorChange = {
+                                onEvent(
+                                    WhiteboardEvent.BackgroundColorChange(
+                                        it
+                                    )
+                                )
+                            },
+                            strokeSliderValue = state.strokeWidth,
+                            onStrokeSliderValueChange = {
+                                onEvent(WhiteboardEvent.StrokeSliderValueChange(it))
+                            },
+                            opacitySliderValue = state.opacity,
+                            onOpacitySliderValueChange = {
+                                onEvent(WhiteboardEvent.OpacitySliderValueChange(it))
+                            }
+                        )
+                    },
+                ) {
+                    DrawingCanvas(
+                        modifier = Modifier.fillMaxSize(),
+                        state = state,
+                        onEvent = onEvent
+                    )
+                    TopBarHorizontal(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(20.dp),
+                        onHomeIconClick = {},
+                        onUndoIconClick = {},
+                        onRedoIconClick = {},
+                        onMenuIconClick = { scope.launch { drawerState.open() } }
+                    )
+                    DrawingToolFAB(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(20.dp),
+                        isVisible = !state.isDrawingToolsCardVisible,
+                        selectedTool = state.selectedTool,
+                        onClick = { onEvent(WhiteboardEvent.OnFABClick) }
+                    )
+                    DrawingToolsCardHorizontal(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(20.dp),
+                        isVisible = state.isDrawingToolsCardVisible,
+                        selectedTool = state.selectedTool,
+                        onToolClick = { onEvent(WhiteboardEvent.OnDrawingToolSelected(it)) },
+                        onCloseIconClick = { onEvent(WhiteboardEvent.OnDrawingToolsCardClose) }
+                    )
+                }
             }
 
             else -> {
@@ -77,15 +129,39 @@ fun WhiteboardScreen(
                     state = state,
                     onEvent = onEvent
                 )
-                TopBarVertical(
+                Row(
                     modifier = Modifier
+                        .fillMaxHeight()
                         .align(Alignment.TopStart)
-                        .padding(20.dp),
-                    onHomeIconClick = {},
-                    onUndoIconClick = {},
-                    onRedoIconClick = {},
-                    onMenuIconClick = {}
-                )
+                        .padding(20.dp)
+                ) {
+                    TopBarVertical(
+                        onHomeIconClick = {},
+                        onUndoIconClick = {},
+                        onRedoIconClick = {},
+                        onMenuIconClick = { isCommandPaletteOpen = true }
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    CommandPaletteCard(
+                        isVisible = isCommandPaletteOpen,
+                        onCloseIconClick = { isCommandPaletteOpen = false },
+                        selectedDrawingTool = state.selectedTool,
+                        strokeColors = defaultDrawingColors,
+                        selectedStrokeColor = state.strokeColor,
+                        onStrokeColorChange = { onEvent(WhiteboardEvent.StrokeColorChange(it)) },
+                        backgroundColors = defaultDrawingColors,
+                        selectedBackgroundColor = state.backgroundColor,
+                        onBackgroundColorChange = { onEvent(WhiteboardEvent.BackgroundColorChange(it)) },
+                        strokeSliderValue = state.strokeWidth,
+                        onStrokeSliderValueChange = {
+                            onEvent(WhiteboardEvent.StrokeSliderValueChange(it))
+                        },
+                        opacitySliderValue = state.opacity,
+                        onOpacitySliderValueChange = {
+                            onEvent(WhiteboardEvent.OpacitySliderValueChange(it))
+                        }
+                    )
+                }
                 DrawingToolFAB(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -134,20 +210,48 @@ private fun DrawingCanvas(
                 )
             }
     ) {
-        state.paths.forEach { drawnPath ->
-            drawPath(
-                path = drawnPath.path,
-                color = Color.Black,
-                style = Stroke(width = 10f)
-            )
+        state.paths.forEach { path ->
+            val pathOpacity = path.opacity / 100
+
+            when (path.backgroundColor) {
+                Color.Transparent -> {
+                    drawPath(
+                        path = path.path,
+                        color = path.strokeColor.copy(alpha = pathOpacity),
+                        style = Stroke(width = path.strokeWidth.dp.toPx())
+                    )
+                }
+
+                else -> {
+                    drawPath(
+                        path = path.path,
+                        color = path.backgroundColor.copy(alpha = pathOpacity),
+                        style = Fill
+                    )
+                }
+            }
         }
 
-        state.currentPath?.let { drawnPath ->
-            drawPath(
-                path = drawnPath.path,
-                color = Color.Black,
-                style = Stroke(width = 10f)
-            )
+        state.currentPath?.let { path ->
+            val pathOpacity = path.opacity / 100
+
+            when (path.backgroundColor) {
+                Color.Transparent -> {
+                    drawPath(
+                        path = path.path,
+                        color = path.strokeColor.copy(alpha = pathOpacity),
+                        style = Stroke(width = path.strokeWidth.dp.toPx())
+                    )
+                }
+
+                else -> {
+                    drawPath(
+                        path = path.path,
+                        color = path.backgroundColor.copy(alpha = pathOpacity),
+                        style = Fill
+                    )
+                }
+            }
         }
     }
 }
