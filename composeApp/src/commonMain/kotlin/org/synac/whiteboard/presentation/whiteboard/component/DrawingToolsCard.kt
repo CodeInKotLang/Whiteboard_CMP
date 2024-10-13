@@ -124,9 +124,6 @@ private fun DrawingToolItem(
     isSelected: Boolean,
     onToolClick: () -> Unit
 ) {
-    val imageIcons =
-        listOf(DrawingTool.PEN, DrawingTool.HIGHLIGHTER, DrawingTool.LASER_PEN, DrawingTool.ERASER)
-
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -136,9 +133,7 @@ private fun DrawingToolItem(
                 modifier = Modifier.size(20.dp),
                 painter = painterResource(drawingTool.res),
                 contentDescription = drawingTool.name,
-                tint = if (imageIcons.contains(drawingTool)) {
-                    Color.Unspecified
-                } else LocalContentColor.current
+                tint = if (drawingTool.isColored) Color.Unspecified else LocalContentColor.current
             )
         }
         if (isSelected) {

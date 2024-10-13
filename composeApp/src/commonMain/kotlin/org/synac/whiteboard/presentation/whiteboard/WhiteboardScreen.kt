@@ -23,11 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import org.synac.whiteboard.domain.model.DrawnPath
 import org.synac.whiteboard.presentation.theme.defaultDrawingColors
 import org.synac.whiteboard.presentation.util.UiType
 import org.synac.whiteboard.presentation.util.getUiType
@@ -44,7 +46,8 @@ import org.synac.whiteboard.presentation.whiteboard.component.TopBarVertical
 fun WhiteboardScreen(
     modifier: Modifier = Modifier,
     state: WhiteboardState,
-    onEvent: (WhiteboardEvent) -> Unit
+    onEvent: (WhiteboardEvent) -> Unit,
+    onHomeIconClick: () -> Unit
 ) {
 
     val screenSize = rememberScreenSizeSize()
@@ -65,7 +68,7 @@ fun WhiteboardScreen(
                     drawerContent = {
                         CommandPaletteDrawerContent(
                             onCloseIconClick = { scope.launch { drawerState.close() } },
-                            selectedDrawingTool = state.selectedTool,
+                            selectedDrawingTool = state.selectedDrawingTool,
                             strokeColors = defaultDrawingColors,
                             selectedStrokeColor = state.strokeColor,
                             onStrokeColorChange = { onEvent(WhiteboardEvent.StrokeColorChange(it)) },
@@ -98,7 +101,7 @@ fun WhiteboardScreen(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .padding(20.dp),
-                        onHomeIconClick = {},
+                        onHomeIconClick = onHomeIconClick,
                         onUndoIconClick = {},
                         onRedoIconClick = {},
                         onMenuIconClick = { scope.launch { drawerState.open() } }
@@ -108,7 +111,7 @@ fun WhiteboardScreen(
                             .align(Alignment.BottomEnd)
                             .padding(20.dp),
                         isVisible = !state.isDrawingToolsCardVisible,
-                        selectedTool = state.selectedTool,
+                        selectedTool = state.selectedDrawingTool,
                         onClick = { onEvent(WhiteboardEvent.OnFABClick) }
                     )
                     DrawingToolsCardHorizontal(
@@ -116,7 +119,7 @@ fun WhiteboardScreen(
                             .align(Alignment.BottomCenter)
                             .padding(20.dp),
                         isVisible = state.isDrawingToolsCardVisible,
-                        selectedTool = state.selectedTool,
+                        selectedTool = state.selectedDrawingTool,
                         onToolClick = { onEvent(WhiteboardEvent.OnDrawingToolSelected(it)) },
                         onCloseIconClick = { onEvent(WhiteboardEvent.OnDrawingToolsCardClose) }
                     )
@@ -136,7 +139,7 @@ fun WhiteboardScreen(
                         .padding(20.dp)
                 ) {
                     TopBarVertical(
-                        onHomeIconClick = {},
+                        onHomeIconClick = onHomeIconClick,
                         onUndoIconClick = {},
                         onRedoIconClick = {},
                         onMenuIconClick = { isCommandPaletteOpen = true }
@@ -145,7 +148,7 @@ fun WhiteboardScreen(
                     CommandPaletteCard(
                         isVisible = isCommandPaletteOpen,
                         onCloseIconClick = { isCommandPaletteOpen = false },
-                        selectedDrawingTool = state.selectedTool,
+                        selectedDrawingTool = state.selectedDrawingTool,
                         strokeColors = defaultDrawingColors,
                         selectedStrokeColor = state.strokeColor,
                         onStrokeColorChange = { onEvent(WhiteboardEvent.StrokeColorChange(it)) },
@@ -167,7 +170,7 @@ fun WhiteboardScreen(
                         .align(Alignment.BottomEnd)
                         .padding(20.dp),
                     isVisible = !state.isDrawingToolsCardVisible,
-                    selectedTool = state.selectedTool,
+                    selectedTool = state.selectedDrawingTool,
                     onClick = { onEvent(WhiteboardEvent.OnFABClick) }
                 )
                 DrawingToolsCardVertical(
@@ -175,7 +178,7 @@ fun WhiteboardScreen(
                         .align(Alignment.TopEnd)
                         .padding(20.dp),
                     isVisible = state.isDrawingToolsCardVisible,
-                    selectedTool = state.selectedTool,
+                    selectedTool = state.selectedDrawingTool,
                     onToolClick = { onEvent(WhiteboardEvent.OnDrawingToolSelected(it)) },
                     onCloseIconClick = { onEvent(WhiteboardEvent.OnDrawingToolsCardClose) }
                 )
@@ -211,47 +214,33 @@ private fun DrawingCanvas(
             }
     ) {
         state.paths.forEach { path ->
-            val pathOpacity = path.opacity / 100
-
-            when (path.backgroundColor) {
-                Color.Transparent -> {
-                    drawPath(
-                        path = path.path,
-                        color = path.strokeColor.copy(alpha = pathOpacity),
-                        style = Stroke(width = path.strokeWidth.dp.toPx())
-                    )
-                }
-
-                else -> {
-                    drawPath(
-                        path = path.path,
-                        color = path.backgroundColor.copy(alpha = pathOpacity),
-                        style = Fill
-                    )
-                }
-            }
+            drawCustomPath(path)
         }
 
         state.currentPath?.let { path ->
-            val pathOpacity = path.opacity / 100
+            drawCustomPath(path)
+        }
+    }
+}
 
-            when (path.backgroundColor) {
-                Color.Transparent -> {
-                    drawPath(
-                        path = path.path,
-                        color = path.strokeColor.copy(alpha = pathOpacity),
-                        style = Stroke(width = path.strokeWidth.dp.toPx())
-                    )
-                }
+private fun DrawScope.drawCustomPath(path: DrawnPath) {
+    val pathOpacity = path.opacity / 100
 
-                else -> {
-                    drawPath(
-                        path = path.path,
-                        color = path.backgroundColor.copy(alpha = pathOpacity),
-                        style = Fill
-                    )
-                }
-            }
+    when (path.backgroundColor) {
+        Color.Transparent -> {
+            drawPath(
+                path = path.path,
+                color = path.strokeColor.copy(alpha = pathOpacity),
+                style = Stroke(width = path.strokeWidth.dp.toPx())
+            )
+        }
+
+        else -> {
+            drawPath(
+                path = path.path,
+                color = path.backgroundColor.copy(alpha = pathOpacity),
+                style = Fill
+            )
         }
     }
 }

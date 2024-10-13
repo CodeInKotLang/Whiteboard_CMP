@@ -59,16 +59,16 @@ class WhiteboardViewModel(
             }
 
             is WhiteboardEvent.OnDrawingToolSelected -> {
-                when(event.tool) {
+                when(event.drawingTool) {
                     DrawingTool.RECTANGLE, DrawingTool.CIRCLE, DrawingTool.TRIANGLE -> {
                         _state.update {
-                            it.copy(selectedTool = event.tool)
+                            it.copy(selectedDrawingTool = event.drawingTool)
                         }
                     }
                     else -> {
                         _state.update {
                             it.copy(
-                                selectedTool = event.tool,
+                                selectedDrawingTool = event.drawingTool,
                                 backgroundColor = Color.Transparent
                             )
                         }
@@ -81,7 +81,7 @@ class WhiteboardViewModel(
             }
 
             is WhiteboardEvent.BackgroundColorChange -> {
-                _state.update { it.copy(backgroundColor = event.color) }
+                _state.update { it.copy(backgroundColor = event.backgroundColor) }
             }
 
             is WhiteboardEvent.OpacitySliderValueChange -> {
@@ -89,7 +89,7 @@ class WhiteboardViewModel(
             }
 
             is WhiteboardEvent.StrokeColorChange -> {
-                _state.update { it.copy(strokeColor = event.color) }
+                _state.update { it.copy(strokeColor = event.strokeColor) }
             }
 
             is WhiteboardEvent.StrokeSliderValueChange -> {
@@ -108,7 +108,7 @@ class WhiteboardViewModel(
 
         val startOffset = state.value.startingOffset
 
-        val updatedPath: Path? = when (state.value.selectedTool) {
+        val updatedPath: Path? = when (state.value.selectedDrawingTool) {
             DrawingTool.PEN, DrawingTool.HIGHLIGHTER, DrawingTool.LASER_PEN, DrawingTool.ERASER -> {
                 createFreehandPath(start = startOffset, end = offset)
             }
@@ -139,7 +139,7 @@ class WhiteboardViewModel(
                 it.copy(
                     currentPath = DrawnPath(
                         path = path,
-                        drawingTool = state.value.selectedTool,
+                        drawingTool = state.value.selectedDrawingTool,
                         strokeColor = state.value.strokeColor,
                         backgroundColor = state.value.backgroundColor,
                         opacity = state.value.opacity,

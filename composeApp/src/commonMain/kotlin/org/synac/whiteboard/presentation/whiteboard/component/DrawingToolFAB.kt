@@ -22,8 +22,6 @@ fun DrawingToolFAB(
     selectedTool: DrawingTool,
     onClick: () -> Unit
 ) {
-    val imageIcons =
-        listOf(DrawingTool.PEN, DrawingTool.HIGHLIGHTER, DrawingTool.LASER_PEN, DrawingTool.ERASER)
     AnimatedVisibility(
         modifier = modifier,
         visible = isVisible,
@@ -37,9 +35,7 @@ fun DrawingToolFAB(
                 modifier = Modifier.size(25.dp),
                 painter = painterResource(selectedTool.res),
                 contentDescription = selectedTool.name,
-                tint = if (imageIcons.contains(selectedTool)) {
-                    Color.Unspecified
-                } else LocalContentColor.current
+                tint = if (selectedTool.isColored) Color.Unspecified else LocalContentColor.current
             )
         }
     }

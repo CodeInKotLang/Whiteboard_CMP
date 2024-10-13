@@ -9,7 +9,7 @@ data class WhiteboardState(
     val paths: List<DrawnPath> = emptyList(),
     val currentPath: DrawnPath? = null,
     val startingOffset: Offset = Offset.Zero,
-    val selectedTool: DrawingTool = DrawingTool.PEN,
+    val selectedDrawingTool: DrawingTool = DrawingTool.PEN,
     val isDrawingToolsCardVisible: Boolean = false,
     val strokeWidth: Float = 5f,
     val opacity: Float = 100f,

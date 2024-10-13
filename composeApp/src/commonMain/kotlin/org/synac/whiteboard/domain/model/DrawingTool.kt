@@ -13,12 +13,13 @@ import whiteboard.composeapp.generated.resources.img_laser_pen
 import whiteboard.composeapp.generated.resources.img_pen
 
 enum class DrawingTool(
-    val res: DrawableResource
+    val res: DrawableResource,
+    val isColored: Boolean = false
 ) {
-    PEN(res = Res.drawable.img_pen),
-    HIGHLIGHTER(res = Res.drawable.img_highlighter),
-    LASER_PEN(res = Res.drawable.img_laser_pen),
-    ERASER(res = Res.drawable.img_eraser),
+    PEN(res = Res.drawable.img_pen, isColored = true),
+    HIGHLIGHTER(res = Res.drawable.img_highlighter, isColored = true),
+    LASER_PEN(res = Res.drawable.img_laser_pen, isColored = true),
+    ERASER(res = Res.drawable.img_eraser, isColored = true),
     LINE(res = Res.drawable.ic_line),
     ARROW(res = Res.drawable.ic_arrow),
     RECTANGLE(res = Res.drawable.ic_rectangle),
