@@ -54,6 +54,9 @@ kotlin {
             //navigation
             implementation(libs.navigation.compose)
             implementation(libs.kotlinx.serialization.json)
+
+            //Datastore
+            implementation(libs.androidx.datastore.preferences)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

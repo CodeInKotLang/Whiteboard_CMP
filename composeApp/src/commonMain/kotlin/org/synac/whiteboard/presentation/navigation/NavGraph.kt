@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import org.koin.compose.viewmodel.koinViewModel
+import org.synac.whiteboard.domain.model.ColorScheme
 import org.synac.whiteboard.presentation.dashboard.DashboardScreen
 import org.synac.whiteboard.presentation.settings.SettingsScreen
 import org.synac.whiteboard.presentation.whiteboard.WhiteboardScreen
@@ -18,7 +19,9 @@ import org.synac.whiteboard.presentation.whiteboard.WhiteboardViewModel
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    innerPadding: PaddingValues
+    innerPadding: PaddingValues,
+    currentScheme: ColorScheme,
+    onThemeSelected: (ColorScheme) -> Unit
 ) {
 
     NavHost(
@@ -45,6 +48,8 @@ fun NavGraph(
         }
         composable<Routes.SettingsScreen> {
             SettingsScreen(
+                currentScheme = currentScheme,
+                onThemeSelected = onThemeSelected,
                 onBackIconClick = { navController.navigateUp() }
             )
         }
