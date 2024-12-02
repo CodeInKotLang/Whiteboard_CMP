@@ -16,6 +16,6 @@ interface PathDao {
     @Delete
     suspend fun deletePath(pathEntity: PathEntity)
 
-    @Query("SELECT * FROM path_table")
-    fun getAllPaths(): Flow<List<PathEntity>>
+    @Query("SELECT * FROM path_table WHERE whiteboardId = :whiteboardId")
+    fun getPathsForWhiteboard(whiteboardId: Long): Flow<List<PathEntity>>
 }

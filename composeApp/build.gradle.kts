@@ -57,6 +57,9 @@ kotlin {
 
             //Datastore
             implementation(libs.androidx.datastore.preferences)
+
+            //Kotlin DateTime
+            implementation(libs.kotlinx.datetime)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

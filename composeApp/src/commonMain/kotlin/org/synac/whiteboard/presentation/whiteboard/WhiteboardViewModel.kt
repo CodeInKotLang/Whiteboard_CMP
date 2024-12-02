@@ -5,37 +5,61 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import org.synac.whiteboard.domain.model.DrawingTool
 import org.synac.whiteboard.domain.model.DrawnPath
+import org.synac.whiteboard.domain.model.Whiteboard
 import org.synac.whiteboard.domain.repository.PathRepository
+import org.synac.whiteboard.domain.repository.WhiteboardRepository
+import org.synac.whiteboard.presentation.navigation.Routes
 import kotlin.math.abs
 
 class WhiteboardViewModel(
-    private val pathRepository: PathRepository
+    private val pathRepository: PathRepository,
+    private val whiteboardRepository: WhiteboardRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
+    private val whiteboardId = savedStateHandle.toRoute<Routes.WhiteboardScreen>().whiteboardId
+    private var isFirstPath = true
+
+    private var updatedWhiteboardId = MutableStateFlow(whiteboardId)
+
     private val _state = MutableStateFlow(WhiteboardState())
-    val state = combine(
-        _state,
-        pathRepository.getAllPaths()
-    ) { state, paths ->
-        state.copy(paths = paths)
-    }.stateIn(
+    val state = _state.stateIn(
         scope = viewModelScope,
         started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
         initialValue = WhiteboardState()
     )
 
+    init {
+        whiteboardId?.let { id ->
+            getWhiteboardById(id)
+        }
+        observePaths()
+    }
+
     fun onEvent(event: WhiteboardEvent) {
         when (event) {
             is WhiteboardEvent.StartDrawing -> {
+                if (isFirstPath) {
+                    upsertWhiteboard()
+                    isFirstPath = false
+                }
                 _state.update {
                     it.copy(startingOffset = event.offset)
                 }
@@ -104,6 +128,47 @@ class WhiteboardViewModel(
         }
     }
 
+    private fun getWhiteboardById(whiteboardId: Long) {
+        viewModelScope.launch {
+            val whiteboard = whiteboardRepository.getWhiteboardById(whiteboardId)
+            whiteboard?.let {
+                _state.update {
+                    it.copy(
+                        whiteboardName = whiteboard.name,
+                        canvasColor = whiteboard.canvasColor
+                    )
+                }
+            }
+        }
+    }
+
+    private fun upsertWhiteboard() {
+        viewModelScope.launch {
+            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+            val whiteboard = Whiteboard(
+                name = state.value.whiteboardName,
+                lastEdited = today,
+                canvasColor = state.value.canvasColor,
+                id = whiteboardId
+            )
+            val newId = whiteboardRepository.upsertWhiteboard(whiteboard)
+            updatedWhiteboardId.value = newId
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observePaths() {
+        viewModelScope.launch {
+            updatedWhiteboardId
+                .flatMapLatest { id ->
+                    pathRepository.getPathsForWhiteboard(whiteboardId = id ?: -1)
+                }
+                .collectLatest { paths ->
+                    _state.update { it.copy(paths = paths) }
+                }
+        }
+    }
+
     private fun updateContinuingOffsets(offset: Offset) {
 
         val startOffset = state.value.startingOffset
@@ -134,17 +199,20 @@ class WhiteboardViewModel(
             }
         }
 
-        updatedPath?.let { path ->
+        updatedWhiteboardId.value?.let { id ->
             _state.update {
                 it.copy(
-                    currentPath = DrawnPath(
-                        path = path,
-                        drawingTool = state.value.selectedDrawingTool,
-                        strokeColor = state.value.strokeColor,
-                        backgroundColor = state.value.backgroundColor,
-                        opacity = state.value.opacity,
-                        strokeWidth = state.value.strokeWidth
-                    )
+                    currentPath = updatedPath?.let { path ->
+                        DrawnPath(
+                            path = path,
+                            drawingTool = state.value.selectedDrawingTool,
+                            strokeColor = state.value.strokeColor,
+                            backgroundColor = state.value.backgroundColor,
+                            opacity = state.value.opacity,
+                            strokeWidth = state.value.strokeWidth,
+                            whiteboardId = id
+                        )
+                    }
                 )
             }
         }

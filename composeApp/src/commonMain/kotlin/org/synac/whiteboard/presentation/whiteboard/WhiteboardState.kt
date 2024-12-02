@@ -15,4 +15,6 @@ data class WhiteboardState(
     val opacity: Float = 100f,
     val strokeColor: Color = Color.Black,
     val backgroundColor: Color = Color.Transparent,
+    val whiteboardName: String = "Untitled",
+    val canvasColor: Color = Color.White
 )

@@ -12,6 +12,8 @@ import androidx.navigation.compose.composable
 import org.koin.compose.viewmodel.koinViewModel
 import org.synac.whiteboard.domain.model.ColorScheme
 import org.synac.whiteboard.presentation.dashboard.DashboardScreen
+import org.synac.whiteboard.presentation.dashboard.DashboardState
+import org.synac.whiteboard.presentation.dashboard.DashboardViewModel
 import org.synac.whiteboard.presentation.settings.SettingsScreen
 import org.synac.whiteboard.presentation.whiteboard.WhiteboardScreen
 import org.synac.whiteboard.presentation.whiteboard.WhiteboardViewModel
@@ -30,8 +32,14 @@ fun NavGraph(
         startDestination = Routes.DashboardScreen
     ) {
         composable<Routes.DashboardScreen> {
+            val viewModel = koinViewModel<DashboardViewModel>()
+            val state by viewModel.state.collectAsStateWithLifecycle()
             DashboardScreen(
+                state = state,
                 onSettingsIconClick = { navController.navigate(Routes.SettingsScreen) },
+                onCardClick = { whiteboardId ->
+                    navController.navigate(Routes.WhiteboardScreen(whiteboardId = whiteboardId))
+                },
                 onAddNewWhiteboardClick = {
                     navController.navigate(Routes.WhiteboardScreen(whiteboardId = null))
                 }

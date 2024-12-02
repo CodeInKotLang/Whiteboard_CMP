@@ -13,7 +13,8 @@ fun DrawnPath.toPathEntity(): PathEntity {
         strokeWidth = strokeWidth,
         opacity = opacity,
         strokeColor = strokeColor.toArgb(),
-        backgroundColor = backgroundColor.toArgb()
+        backgroundColor = backgroundColor.toArgb(),
+        whiteboardId = whiteboardId
     )
 }
 
@@ -25,10 +26,9 @@ fun PathEntity.toDrawnPath(): DrawnPath {
         strokeWidth = strokeWidth,
         opacity = opacity,
         strokeColor = Color(strokeColor),
-        backgroundColor = Color(backgroundColor)
+        backgroundColor = Color(backgroundColor),
+        whiteboardId = whiteboardId
     )
 }
 
-fun List<PathEntity>.toDrawnPaths(): List<DrawnPath> {
-    return map { it.toDrawnPath() }
-}
+fun List<PathEntity>.toDrawnPathList() = map { it.toDrawnPath() }
