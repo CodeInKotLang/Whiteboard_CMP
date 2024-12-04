@@ -12,7 +12,6 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -60,9 +59,7 @@ class WhiteboardViewModel(
                     upsertWhiteboard()
                     isFirstPath = false
                 }
-                _state.update {
-                    it.copy(startingOffset = event.offset)
-                }
+                _state.update { it.copy(startingOffset = event.offset) }
             }
 
             is WhiteboardEvent.ContinueDrawing -> {
@@ -71,11 +68,16 @@ class WhiteboardViewModel(
 
             WhiteboardEvent.FinishDrawing -> {
                 state.value.currentPath?.let { drawnPath ->
-                    insertPath(drawnPath)
+                    when(drawnPath.drawingTool) {
+                        DrawingTool.LASER_PEN -> {
+                            _state.update { it.copy(laserPenPath = drawnPath) }
+                        }
+                        else -> {
+                            insertPath(drawnPath)
+                        }
+                    }
                 }
-                _state.update {
-                    it.copy(currentPath = null)
-                }
+                _state.update { it.copy(currentPath = null) }
             }
 
             WhiteboardEvent.OnDrawingToolsCardClose -> {
@@ -118,6 +120,10 @@ class WhiteboardViewModel(
 
             is WhiteboardEvent.StrokeSliderValueChange -> {
                 _state.update { it.copy(strokeWidth = event.strokeWidth) }
+            }
+
+            WhiteboardEvent.OnLaserPathAnimationComplete -> {
+                _state.update { it.copy(laserPenPath = null) }
             }
         }
     }
@@ -178,25 +184,15 @@ class WhiteboardViewModel(
                 createFreehandPath(start = startOffset, end = offset)
             }
 
-            DrawingTool.LINE -> {
-                createLinePath(start = startOffset, end = offset)
-            }
+            DrawingTool.LINE -> createLinePath(start = startOffset, end = offset)
 
-            DrawingTool.ARROW -> {
-                null
-            }
+            DrawingTool.ARROW -> null
 
-            DrawingTool.RECTANGLE -> {
-                createRectanglePath(start = startOffset, end = offset)
-            }
+            DrawingTool.RECTANGLE -> createRectanglePath(start = startOffset, end = offset)
 
-            DrawingTool.CIRCLE -> {
-                createCirclePath(start = startOffset, end = offset)
-            }
+            DrawingTool.CIRCLE -> createCirclePath(start = startOffset, end = offset)
 
-            DrawingTool.TRIANGLE -> {
-                createTrianglePath(start = startOffset, end = offset)
-            }
+            DrawingTool.TRIANGLE -> createTrianglePath(start = startOffset, end = offset)
         }
 
         updatedWhiteboardId.value?.let { id ->
@@ -244,25 +240,22 @@ class WhiteboardViewModel(
     }
 
     private fun createCirclePath(start: Offset, end: Offset): Path {
-        val width = abs(end.x - start.x)
-        val height = abs(end.y - start.y)
+        val width = end.x - start.x
+        val height = end.y - start.y
         return Path().apply {
             addOval(Rect(offset = start, size = Size(width = width, height = height)))
         }
     }
 
     private fun createTrianglePath(start: Offset, end: Offset): Path {
-
-        val height = abs(end.y - start.y)
-        val halfBaseWidth = abs(end.x - start.x) / 2
-
-        val bottomLeftVertex = Offset(x = start.x - halfBaseWidth, y = start.y + height)
-        val bottomRightVertex = Offset(x = start.x + halfBaseWidth, y = start.y + height)
+        val height = end.y - start.y
+        val baseWidth = end.x - start.x
+        val remainingVertex = Offset(x = start.x - baseWidth, y = start.y + height)
 
         return Path().apply {
             moveTo(start.x, start.y)
-            lineTo(bottomLeftVertex.x, bottomLeftVertex.y)
-            lineTo(bottomRightVertex.x, bottomRightVertex.y)
+            lineTo(end.x, end.y)
+            lineTo(remainingVertex.x, remainingVertex.y)
             close()
         }
     }

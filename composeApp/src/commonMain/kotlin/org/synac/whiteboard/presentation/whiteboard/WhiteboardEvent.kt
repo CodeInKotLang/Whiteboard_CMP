@@ -15,4 +15,5 @@ sealed class WhiteboardEvent {
     data class OpacitySliderValueChange(val opacity: Float) : WhiteboardEvent()
     data class StrokeColorChange(val strokeColor: Color) : WhiteboardEvent()
     data class BackgroundColorChange(val backgroundColor: Color) : WhiteboardEvent()
+    data object OnLaserPathAnimationComplete : WhiteboardEvent()
 }

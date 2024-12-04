@@ -1,5 +1,7 @@
 package org.synac.whiteboard.presentation.whiteboard
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -14,8 +16,10 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -23,6 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -221,6 +227,10 @@ private fun DrawingCanvas(
             drawCustomPath(path)
         }
     }
+    AnimateLaserPath(
+        laserPenPath = state.laserPenPath,
+        onPathAnimationComplete = { onEvent(WhiteboardEvent.OnLaserPathAnimationComplete) }
+    )
 }
 
 private fun DrawScope.drawCustomPath(path: DrawnPath) {
@@ -244,3 +254,45 @@ private fun DrawScope.drawCustomPath(path: DrawnPath) {
         }
     }
 }
+
+@Composable
+fun AnimateLaserPath(
+    laserPenPath: DrawnPath?,
+    onPathAnimationComplete: () -> Unit
+) {
+    val animationProgress = remember { Animatable(initialValue = 1f) }
+    LaunchedEffect(laserPenPath) {
+        laserPenPath?.let {
+            animationProgress.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = 1000)
+            )
+            onPathAnimationComplete()
+            animationProgress.snapTo(targetValue = 1f)
+        }
+    }
+    val trimmedPath = Path()
+    PathMeasure().apply {
+        setPath(path = laserPenPath?.path, forceClosed = false)
+        getSegment(
+            startDistance = length * (1 - animationProgress.value),
+            stopDistance = length,
+            destination = trimmedPath //stores the resulting path segment in trimmedPath.
+        )
+    }
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        laserPenPath?.let {
+            drawPath(
+                path = trimmedPath,
+                color = laserPenPath.strokeColor,
+                style = Stroke(width = laserPenPath.strokeWidth.dp.toPx())
+            )
+        }
+    }
+}
+
+
+
+
+
+

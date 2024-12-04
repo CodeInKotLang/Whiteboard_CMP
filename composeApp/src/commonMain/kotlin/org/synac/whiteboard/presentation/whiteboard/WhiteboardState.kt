@@ -8,6 +8,7 @@ import org.synac.whiteboard.domain.model.DrawnPath
 data class WhiteboardState(
     val paths: List<DrawnPath> = emptyList(),
     val currentPath: DrawnPath? = null,
+    val laserPenPath: DrawnPath? = null,
     val startingOffset: Offset = Offset.Zero,
     val selectedDrawingTool: DrawingTool = DrawingTool.PEN,
     val isDrawingToolsCardVisible: Boolean = false,
