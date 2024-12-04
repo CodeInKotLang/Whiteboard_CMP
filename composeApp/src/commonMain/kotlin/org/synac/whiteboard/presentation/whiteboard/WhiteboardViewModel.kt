@@ -63,21 +63,31 @@ class WhiteboardViewModel(
             }
 
             is WhiteboardEvent.ContinueDrawing -> {
-                updateContinuingOffsets(event.offset)
+                updateContinuingOffsets(event.continuingOffset)
             }
 
             WhiteboardEvent.FinishDrawing -> {
                 state.value.currentPath?.let { drawnPath ->
-                    when(drawnPath.drawingTool) {
+                    when (drawnPath.drawingTool) {
+                        DrawingTool.ERASER -> {
+                            deletePaths(state.value.pathsToBeDeleted)
+                        }
+
                         DrawingTool.LASER_PEN -> {
                             _state.update { it.copy(laserPenPath = drawnPath) }
                         }
+
                         else -> {
                             insertPath(drawnPath)
                         }
                     }
                 }
-                _state.update { it.copy(currentPath = null) }
+                _state.update {
+                    it.copy(
+                        currentPath = null,
+                        pathsToBeDeleted = emptyList()
+                    )
+                }
             }
 
             WhiteboardEvent.OnDrawingToolsCardClose -> {
@@ -85,12 +95,13 @@ class WhiteboardViewModel(
             }
 
             is WhiteboardEvent.OnDrawingToolSelected -> {
-                when(event.drawingTool) {
+                when (event.drawingTool) {
                     DrawingTool.RECTANGLE, DrawingTool.CIRCLE, DrawingTool.TRIANGLE -> {
                         _state.update {
                             it.copy(selectedDrawingTool = event.drawingTool)
                         }
                     }
+
                     else -> {
                         _state.update {
                             it.copy(
@@ -114,6 +125,11 @@ class WhiteboardViewModel(
                 _state.update { it.copy(opacity = event.opacity) }
             }
 
+            is WhiteboardEvent.CanvasColorChange -> {
+                _state.update { it.copy(canvasColor = event.canvasColor) }
+                upsertWhiteboard()
+            }
+
             is WhiteboardEvent.StrokeColorChange -> {
                 _state.update { it.copy(strokeColor = event.strokeColor) }
             }
@@ -131,6 +147,14 @@ class WhiteboardViewModel(
     private fun insertPath(path: DrawnPath) {
         viewModelScope.launch {
             pathRepository.upsertPath(path)
+        }
+    }
+
+    private fun deletePaths(paths: List<DrawnPath>) {
+        viewModelScope.launch {
+            paths.forEach { path ->
+                pathRepository.deletePath(path)
+            }
         }
     }
 
@@ -175,24 +199,37 @@ class WhiteboardViewModel(
         }
     }
 
-    private fun updateContinuingOffsets(offset: Offset) {
+    private fun updateContinuingOffsets(continuingOffset: Offset) {
 
         val startOffset = state.value.startingOffset
 
         val updatedPath: Path? = when (state.value.selectedDrawingTool) {
-            DrawingTool.PEN, DrawingTool.HIGHLIGHTER, DrawingTool.LASER_PEN, DrawingTool.ERASER -> {
-                createFreehandPath(start = startOffset, end = offset)
+            DrawingTool.PEN, DrawingTool.HIGHLIGHTER, DrawingTool.LASER_PEN -> {
+                createFreehandPath(start = startOffset, continuingOffset = continuingOffset)
             }
 
-            DrawingTool.LINE -> createLinePath(start = startOffset, end = offset)
+            DrawingTool.ERASER -> {
+                updatePathsToBeDeleted(start = startOffset, continuingOffset = continuingOffset)
+                createEraserPath(continuingOffset = continuingOffset)
+            }
+
+            DrawingTool.LINE -> {
+                createLinePath(start = startOffset, continuingOffset = continuingOffset)
+            }
 
             DrawingTool.ARROW -> null
 
-            DrawingTool.RECTANGLE -> createRectanglePath(start = startOffset, end = offset)
+            DrawingTool.RECTANGLE -> {
+                createRectanglePath(start = startOffset, continuingOffset = continuingOffset)
+            }
 
-            DrawingTool.CIRCLE -> createCirclePath(start = startOffset, end = offset)
+            DrawingTool.CIRCLE -> {
+                createCirclePath(start = startOffset, continuingOffset = continuingOffset)
+            }
 
-            DrawingTool.TRIANGLE -> createTrianglePath(start = startOffset, end = offset)
+            DrawingTool.TRIANGLE -> {
+                createTrianglePath(start = startOffset, continuingOffset = continuingOffset)
+            }
         }
 
         updatedWhiteboardId.value?.let { id ->
@@ -214,49 +251,71 @@ class WhiteboardViewModel(
         }
     }
 
-    private fun createFreehandPath(start: Offset, end: Offset): Path {
+    private fun createEraserPath(continuingOffset: Offset): Path {
+        return Path().apply {
+            addOval(Rect(center = continuingOffset, radius = 5f))
+        }
+    }
+
+    private fun createFreehandPath(start: Offset, continuingOffset: Offset): Path {
         val existingPath = state.value.currentPath?.path ?: Path().apply {
             moveTo(start.x, start.y)
         }
         return Path().apply {
             addPath(existingPath)
-            lineTo(end.x, end.y)
+            lineTo(continuingOffset.x, continuingOffset.y)
         }
     }
 
-    private fun createLinePath(start: Offset, end: Offset): Path {
+    private fun createLinePath(start: Offset, continuingOffset: Offset): Path {
         return Path().apply {
             moveTo(start.x, start.y)
-            lineTo(end.x, end.y)
+            lineTo(continuingOffset.x, continuingOffset.y)
         }
     }
 
-    private fun createRectanglePath(start: Offset, end: Offset): Path {
-        val width = abs(end.x - start.x)
-        val height = abs(end.y - start.y)
+    private fun createRectanglePath(start: Offset, continuingOffset: Offset): Path {
+        val width = abs(continuingOffset.x - start.x)
+        val height = abs(continuingOffset.y - start.y)
         return Path().apply {
             addRect(Rect(offset = start, size = Size(width = width, height = height)))
         }
     }
 
-    private fun createCirclePath(start: Offset, end: Offset): Path {
-        val width = end.x - start.x
-        val height = end.y - start.y
+    private fun createCirclePath(start: Offset, continuingOffset: Offset): Path {
+        val width = continuingOffset.x - start.x
+        val height = continuingOffset.y - start.y
         return Path().apply {
             addOval(Rect(offset = start, size = Size(width = width, height = height)))
         }
     }
 
-    private fun createTrianglePath(start: Offset, end: Offset): Path {
-        val height = end.y - start.y
-        val baseWidth = end.x - start.x
+    private fun createTrianglePath(start: Offset, continuingOffset: Offset): Path {
+        val height = continuingOffset.y - start.y
+        val baseWidth = continuingOffset.x - start.x
         val remainingVertex = Offset(x = start.x - baseWidth, y = start.y + height)
 
         return Path().apply {
             moveTo(start.x, start.y)
-            lineTo(end.x, end.y)
+            lineTo(continuingOffset.x, continuingOffset.y)
             lineTo(remainingVertex.x, remainingVertex.y)
             close()
         }
     }
+
+    private fun updatePathsToBeDeleted(start: Offset, continuingOffset: Offset) {
+        val pathsToBeDeleted = state.value.pathsToBeDeleted.toMutableList()
+        state.value.paths.forEach { drawnPath ->
+            val bounds = drawnPath.path.getBounds()
+            if (bounds.contains(start) || bounds.contains(continuingOffset)) {
+                if (!pathsToBeDeleted.contains(drawnPath)) {
+                    pathsToBeDeleted.add(drawnPath)
+                }
+            }
+        }
+        _state.update { it.copy(pathsToBeDeleted = pathsToBeDeleted) }
+    }
 }
+
+
+

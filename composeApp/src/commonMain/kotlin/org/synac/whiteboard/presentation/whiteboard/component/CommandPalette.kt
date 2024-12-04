@@ -46,6 +46,9 @@ fun CommandPaletteDrawerContent(
     modifier: Modifier = Modifier,
     selectedDrawingTool: DrawingTool,
     onCloseIconClick: () -> Unit,
+    canvasColors: List<Color>,
+    selectedCanvasColor: Color,
+    onCanvasColorChange: (Color) -> Unit,
     strokeColors: List<Color>,
     selectedStrokeColor: Color,
     onStrokeColorChange: (Color) -> Unit,
@@ -65,6 +68,9 @@ fun CommandPaletteDrawerContent(
         CommandPaletteContent(
             selectedDrawingTool = selectedDrawingTool,
             onCloseIconClick = onCloseIconClick,
+            canvasColors = canvasColors,
+            selectedCanvasColor = selectedCanvasColor,
+            onCanvasColorChange = onCanvasColorChange,
             strokeColors = strokeColors,
             selectedStrokeColor = selectedStrokeColor,
             onStrokeColorChange = onStrokeColorChange,
@@ -85,6 +91,9 @@ fun CommandPaletteCard(
     isVisible: Boolean,
     selectedDrawingTool: DrawingTool,
     onCloseIconClick: () -> Unit,
+    canvasColors: List<Color>,
+    selectedCanvasColor: Color,
+    onCanvasColorChange: (Color) -> Unit,
     strokeColors: List<Color>,
     selectedStrokeColor: Color,
     onStrokeColorChange: (Color) -> Unit,
@@ -108,6 +117,9 @@ fun CommandPaletteCard(
             CommandPaletteContent(
                 selectedDrawingTool = selectedDrawingTool,
                 onCloseIconClick = onCloseIconClick,
+                canvasColors = canvasColors,
+                selectedCanvasColor = selectedCanvasColor,
+                onCanvasColorChange = onCanvasColorChange,
                 strokeColors = strokeColors,
                 selectedStrokeColor = selectedStrokeColor,
                 onStrokeColorChange = onStrokeColorChange,
@@ -128,6 +140,9 @@ private fun CommandPaletteContent(
     modifier: Modifier = Modifier,
     selectedDrawingTool: DrawingTool,
     onCloseIconClick: () -> Unit,
+    canvasColors: List<Color>,
+    selectedCanvasColor: Color,
+    onCanvasColorChange: (Color) -> Unit,
     strokeColors: List<Color>,
     selectedStrokeColor: Color,
     onStrokeColorChange: (Color) -> Unit,
@@ -139,6 +154,7 @@ private fun CommandPaletteContent(
     opacitySliderValue: Float,
     onOpacitySliderValueChange: (Float) -> Unit,
 ) {
+    val updatedCanvasColors = listOf(Color.White) + canvasColors
     val updatedStrokeColors = listOf(Color.Black) + strokeColors
 
     Column(
@@ -158,6 +174,14 @@ private fun CommandPaletteContent(
             }
         }
         HorizontalDivider(modifier = Modifier.height(20.dp))
+        ColorSection(
+            sectionTitle = "Canvas",
+            colors = updatedCanvasColors,
+            selectedColor = selectedCanvasColor,
+            onColorChange = onCanvasColorChange,
+            onColorPaletteClick = {}
+        )
+        Spacer(modifier = Modifier.height(20.dp))
         ColorSection(
             sectionTitle = "Stroke",
             colors = updatedStrokeColors,

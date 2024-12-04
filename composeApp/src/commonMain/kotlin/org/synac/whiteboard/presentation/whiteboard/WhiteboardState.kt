@@ -7,6 +7,7 @@ import org.synac.whiteboard.domain.model.DrawnPath
 
 data class WhiteboardState(
     val paths: List<DrawnPath> = emptyList(),
+    val pathsToBeDeleted: List<DrawnPath> = emptyList(),
     val currentPath: DrawnPath? = null,
     val laserPenPath: DrawnPath? = null,
     val startingOffset: Offset = Offset.Zero,
@@ -14,8 +15,8 @@ data class WhiteboardState(
     val isDrawingToolsCardVisible: Boolean = false,
     val strokeWidth: Float = 5f,
     val opacity: Float = 100f,
+    val canvasColor: Color = Color.White,
     val strokeColor: Color = Color.Black,
     val backgroundColor: Color = Color.Transparent,
     val whiteboardName: String = "Untitled",
-    val canvasColor: Color = Color.White
 )

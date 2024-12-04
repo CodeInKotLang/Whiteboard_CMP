@@ -36,6 +36,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.synac.whiteboard.domain.model.DrawnPath
+import org.synac.whiteboard.presentation.theme.defaultCanvasColors
 import org.synac.whiteboard.presentation.theme.defaultDrawingColors
 import org.synac.whiteboard.presentation.util.UiType
 import org.synac.whiteboard.presentation.util.getUiType
@@ -75,6 +76,9 @@ fun WhiteboardScreen(
                         CommandPaletteDrawerContent(
                             onCloseIconClick = { scope.launch { drawerState.close() } },
                             selectedDrawingTool = state.selectedDrawingTool,
+                            canvasColors = defaultCanvasColors,
+                            selectedCanvasColor = state.canvasColor,
+                            onCanvasColorChange = {onEvent(WhiteboardEvent.CanvasColorChange(it))},
                             strokeColors = defaultDrawingColors,
                             selectedStrokeColor = state.strokeColor,
                             onStrokeColorChange = { onEvent(WhiteboardEvent.StrokeColorChange(it)) },
@@ -155,6 +159,9 @@ fun WhiteboardScreen(
                         isVisible = isCommandPaletteOpen,
                         onCloseIconClick = { isCommandPaletteOpen = false },
                         selectedDrawingTool = state.selectedDrawingTool,
+                        canvasColors = defaultCanvasColors,
+                        selectedCanvasColor = state.canvasColor,
+                        onCanvasColorChange = {onEvent(WhiteboardEvent.CanvasColorChange(it))},
                         strokeColors = defaultDrawingColors,
                         selectedStrokeColor = state.strokeColor,
                         onStrokeColorChange = { onEvent(WhiteboardEvent.StrokeColorChange(it)) },
@@ -200,10 +207,9 @@ private fun DrawingCanvas(
     state: WhiteboardState,
     onEvent: (WhiteboardEvent) -> Unit
 ) {
-
     Canvas(
         modifier = modifier
-            .background(Color.White)
+            .background(state.canvasColor)
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragStart = { offset ->
