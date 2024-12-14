@@ -2,6 +2,7 @@ package org.synac.whiteboard.presentation.whiteboard
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import org.synac.whiteboard.domain.model.ColorPaletteType
 import org.synac.whiteboard.domain.model.DrawingTool
 
 sealed class WhiteboardEvent {
@@ -15,6 +16,9 @@ sealed class WhiteboardEvent {
     data class OpacitySliderValueChange(val opacity: Float) : WhiteboardEvent()
     data class CanvasColorChange(val canvasColor: Color) : WhiteboardEvent()
     data class StrokeColorChange(val strokeColor: Color) : WhiteboardEvent()
-    data class BackgroundColorChange(val backgroundColor: Color) : WhiteboardEvent()
+    data class FillColorChange(val backgroundColor: Color) : WhiteboardEvent()
+    data class OnColorPaletteIconClick(val colorPaletteType: ColorPaletteType): WhiteboardEvent()
+    data class OnColorSelected(val color: Color): WhiteboardEvent()
+    data object ColorSelectionDialogDismiss : WhiteboardEvent()
     data object OnLaserPathAnimationComplete : WhiteboardEvent()
 }

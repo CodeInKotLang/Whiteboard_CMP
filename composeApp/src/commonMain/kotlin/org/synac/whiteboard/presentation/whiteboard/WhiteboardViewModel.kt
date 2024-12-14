@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import org.synac.whiteboard.domain.model.ColorPaletteType
 import org.synac.whiteboard.domain.model.DrawingTool
 import org.synac.whiteboard.domain.model.DrawnPath
 import org.synac.whiteboard.domain.model.Whiteboard
@@ -106,7 +107,7 @@ class WhiteboardViewModel(
                         _state.update {
                             it.copy(
                                 selectedDrawingTool = event.drawingTool,
-                                backgroundColor = Color.Transparent
+                                fillColor = Color.Transparent
                             )
                         }
                     }
@@ -117,8 +118,8 @@ class WhiteboardViewModel(
                 _state.update { it.copy(isDrawingToolsCardVisible = true) }
             }
 
-            is WhiteboardEvent.BackgroundColorChange -> {
-                _state.update { it.copy(backgroundColor = event.backgroundColor) }
+            is WhiteboardEvent.FillColorChange -> {
+                _state.update { it.copy(fillColor = event.backgroundColor) }
             }
 
             is WhiteboardEvent.OpacitySliderValueChange -> {
@@ -140,6 +141,36 @@ class WhiteboardViewModel(
 
             WhiteboardEvent.OnLaserPathAnimationComplete -> {
                 _state.update { it.copy(laserPenPath = null) }
+            }
+
+            is WhiteboardEvent.OnColorPaletteIconClick -> {
+                _state.update {
+                    it.copy(
+                        isColorSelectionDialogOpen = true,
+                        selectedColorPaletteType = event.colorPaletteType
+                    )
+                }
+            }
+
+            WhiteboardEvent.ColorSelectionDialogDismiss -> {
+                _state.update { it.copy(isColorSelectionDialogOpen = false) }
+            }
+
+            is WhiteboardEvent.OnColorSelected -> {
+                val state = state.value
+                val color = event.color
+                when(state.selectedColorPaletteType) {
+                    ColorPaletteType.CANVAS -> {
+                        _state.update { it.copy(canvasColor = color) }
+                        upsertWhiteboard()
+                    }
+                    ColorPaletteType.STROKE -> {
+                        _state.update { it.copy(strokeColor = color) }
+                    }
+                    ColorPaletteType.FILL -> {
+                        _state.update { it.copy(fillColor = color) }
+                    }
+                }
             }
         }
     }
@@ -179,7 +210,7 @@ class WhiteboardViewModel(
                 name = state.value.whiteboardName,
                 lastEdited = today,
                 canvasColor = state.value.canvasColor,
-                id = whiteboardId
+                id = updatedWhiteboardId.value
             )
             val newId = whiteboardRepository.upsertWhiteboard(whiteboard)
             updatedWhiteboardId.value = newId
@@ -240,7 +271,7 @@ class WhiteboardViewModel(
                             path = path,
                             drawingTool = state.value.selectedDrawingTool,
                             strokeColor = state.value.strokeColor,
-                            backgroundColor = state.value.backgroundColor,
+                            fillColor = state.value.fillColor,
                             opacity = state.value.opacity,
                             strokeWidth = state.value.strokeWidth,
                             whiteboardId = id

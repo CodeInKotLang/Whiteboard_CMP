@@ -2,7 +2,7 @@ package org.synac.whiteboard.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import org.synac.whiteboard.data.local.dao.WhiteboardDao
+import org.synac.whiteboard.data.database.dao.WhiteboardDao
 import org.synac.whiteboard.data.mapper.toWhiteboard
 import org.synac.whiteboard.data.mapper.toWhiteboardEntity
 import org.synac.whiteboard.data.mapper.toWhiteboardList

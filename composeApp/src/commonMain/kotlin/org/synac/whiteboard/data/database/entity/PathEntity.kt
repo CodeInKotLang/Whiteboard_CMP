@@ -1,4 +1,4 @@
-package org.synac.whiteboard.data.local.entity
+package org.synac.whiteboard.data.database.entity
 
 import androidx.compose.ui.graphics.Path
 import androidx.room.Entity
@@ -14,7 +14,7 @@ data class PathEntity(
     val path: Path,
     val strokeWidth: Float,
     val strokeColor: Int,
-    val backgroundColor: Int,
+    val fillColor: Int,
     val opacity: Float,
     val whiteboardId: Long
 )

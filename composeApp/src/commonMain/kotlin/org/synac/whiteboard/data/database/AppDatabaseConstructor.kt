@@ -1,4 +1,4 @@
-package org.synac.whiteboard.data.local
+package org.synac.whiteboard.data.database
 
 import androidx.room.RoomDatabaseConstructor
 

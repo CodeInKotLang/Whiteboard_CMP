@@ -1,4 +1,4 @@
-package org.synac.whiteboard.data.local.convertor
+package org.synac.whiteboard.data.database.convertor
 
 import androidx.room.TypeConverter
 import kotlinx.datetime.LocalDate

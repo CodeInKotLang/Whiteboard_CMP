@@ -1,18 +1,18 @@
-package org.synac.whiteboard.data.local
+package org.synac.whiteboard.data.database
 
 import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import org.synac.whiteboard.data.local.convertor.LocalDateConverter
-import org.synac.whiteboard.data.local.convertor.PathConverter
-import org.synac.whiteboard.data.local.dao.PathDao
-import org.synac.whiteboard.data.local.dao.WhiteboardDao
-import org.synac.whiteboard.data.local.entity.PathEntity
-import org.synac.whiteboard.data.local.entity.WhiteboardEntity
+import org.synac.whiteboard.data.database.convertor.LocalDateConverter
+import org.synac.whiteboard.data.database.convertor.PathConverter
+import org.synac.whiteboard.data.database.dao.PathDao
+import org.synac.whiteboard.data.database.dao.WhiteboardDao
+import org.synac.whiteboard.data.database.entity.PathEntity
+import org.synac.whiteboard.data.database.entity.WhiteboardEntity
 
 @Database(
-    version = 5,
+    version = 6,
     entities = [PathEntity::class, WhiteboardEntity::class],
     exportSchema = true
 )

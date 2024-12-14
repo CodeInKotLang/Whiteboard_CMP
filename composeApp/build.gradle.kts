@@ -60,6 +60,9 @@ kotlin {
 
             //Kotlin DateTime
             implementation(libs.kotlinx.datetime)
+
+            //Color Picker
+            implementation(libs.compose.colorpicker)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

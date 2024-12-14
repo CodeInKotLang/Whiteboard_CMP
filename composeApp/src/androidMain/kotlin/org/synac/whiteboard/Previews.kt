@@ -6,8 +6,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.datetime.LocalDate
 import org.synac.whiteboard.domain.model.Whiteboard
 import org.synac.whiteboard.presentation.dashboard.component.WhiteboardItemCard
+import org.synac.whiteboard.presentation.whiteboard.component.ColorSelectionDialog
 
-@Preview
+//@Preview
 @Composable
 fun PreviewWhiteboardItemCard() {
     WhiteboardItemCard(
@@ -18,5 +19,15 @@ fun PreviewWhiteboardItemCard() {
         ),
         onRenameClick = {},
         onDeleteClick = {}
+    )
+}
+
+@Preview
+@Composable
+fun PreviewColorSelectionDialog() {
+    ColorSelectionDialog(
+        isOpen = true,
+        onColorSelected = {},
+        onDismiss = {}
     )
 }

@@ -9,7 +9,7 @@ data class DrawnPath(
     val drawingTool: DrawingTool,
     val strokeWidth: Float,
     val strokeColor: Color,
-    val backgroundColor: Color,
+    val fillColor: Color,
     val opacity: Float,
     val whiteboardId: Long
 )

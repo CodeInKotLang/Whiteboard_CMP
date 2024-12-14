@@ -2,7 +2,7 @@ package org.synac.whiteboard.data.mapper
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import org.synac.whiteboard.data.local.entity.WhiteboardEntity
+import org.synac.whiteboard.data.database.entity.WhiteboardEntity
 import org.synac.whiteboard.domain.model.Whiteboard
 
 fun Whiteboard.toWhiteboardEntity(): WhiteboardEntity {

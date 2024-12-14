@@ -2,7 +2,7 @@ package org.synac.whiteboard.data.mapper
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import org.synac.whiteboard.data.local.entity.PathEntity
+import org.synac.whiteboard.data.database.entity.PathEntity
 import org.synac.whiteboard.domain.model.DrawnPath
 
 fun DrawnPath.toPathEntity(): PathEntity {
@@ -13,7 +13,7 @@ fun DrawnPath.toPathEntity(): PathEntity {
         strokeWidth = strokeWidth,
         opacity = opacity,
         strokeColor = strokeColor.toArgb(),
-        backgroundColor = backgroundColor.toArgb(),
+        fillColor = fillColor.toArgb(),
         whiteboardId = whiteboardId
     )
 }
@@ -26,7 +26,7 @@ fun PathEntity.toDrawnPath(): DrawnPath {
         strokeWidth = strokeWidth,
         opacity = opacity,
         strokeColor = Color(strokeColor),
-        backgroundColor = Color(backgroundColor),
+        fillColor = Color(fillColor),
         whiteboardId = whiteboardId
     )
 }

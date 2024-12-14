@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
+import org.synac.whiteboard.domain.model.ColorPaletteType
 import org.synac.whiteboard.domain.model.DrawingTool
 import whiteboard.composeapp.generated.resources.Res
 import whiteboard.composeapp.generated.resources.ic_transparent_bg
@@ -52,13 +53,14 @@ fun CommandPaletteDrawerContent(
     strokeColors: List<Color>,
     selectedStrokeColor: Color,
     onStrokeColorChange: (Color) -> Unit,
-    backgroundColors: List<Color>,
-    selectedBackgroundColor: Color,
-    onBackgroundColorChange: (Color) -> Unit,
-    strokeSliderValue: Float,
-    onStrokeSliderValueChange: (Float) -> Unit,
+    fillColors: List<Color>,
+    selectedFillColor: Color,
+    onFillColorChange: (Color) -> Unit,
+    strokeWidthSliderValue: Float,
+    onStrokeWidthSliderValueChange: (Float) -> Unit,
     opacitySliderValue: Float,
     onOpacitySliderValueChange: (Float) -> Unit,
+    onColorPaletteIconClick: (ColorPaletteType) -> Unit
 ) {
     ElevatedCard(
         modifier = modifier
@@ -74,13 +76,14 @@ fun CommandPaletteDrawerContent(
             strokeColors = strokeColors,
             selectedStrokeColor = selectedStrokeColor,
             onStrokeColorChange = onStrokeColorChange,
-            backgroundColors = backgroundColors,
-            selectedBackgroundColor = selectedBackgroundColor,
-            onBackgroundColorChange = onBackgroundColorChange,
-            strokeSliderValue = strokeSliderValue,
-            onStrokeSliderValueChange = onStrokeSliderValueChange,
+            fillColors = fillColors,
+            selectedFillColor = selectedFillColor,
+            onFillColorChange = onFillColorChange,
+            strokeWidthSliderValue = strokeWidthSliderValue,
+            onStrokeWidthSliderValueChange = onStrokeWidthSliderValueChange,
             opacitySliderValue = opacitySliderValue,
-            onOpacitySliderValueChange = onOpacitySliderValueChange
+            onOpacitySliderValueChange = onOpacitySliderValueChange,
+            onColorPaletteIconClick = onColorPaletteIconClick
         )
     }
 }
@@ -97,13 +100,14 @@ fun CommandPaletteCard(
     strokeColors: List<Color>,
     selectedStrokeColor: Color,
     onStrokeColorChange: (Color) -> Unit,
-    backgroundColors: List<Color>,
-    selectedBackgroundColor: Color,
-    onBackgroundColorChange: (Color) -> Unit,
-    strokeSliderValue: Float,
-    onStrokeSliderValueChange: (Float) -> Unit,
+    fillColors: List<Color>,
+    selectedFillColor: Color,
+    onFillColorChange: (Color) -> Unit,
+    strokeWidthSliderValue: Float,
+    onStrokeWidthSliderValueChange: (Float) -> Unit,
     opacitySliderValue: Float,
     onOpacitySliderValueChange: (Float) -> Unit,
+    onColorPaletteIconClick: (ColorPaletteType) -> Unit
 ) {
     AnimatedVisibility(
         modifier = modifier,
@@ -123,13 +127,14 @@ fun CommandPaletteCard(
                 strokeColors = strokeColors,
                 selectedStrokeColor = selectedStrokeColor,
                 onStrokeColorChange = onStrokeColorChange,
-                backgroundColors = backgroundColors,
-                selectedBackgroundColor = selectedBackgroundColor,
-                onBackgroundColorChange = onBackgroundColorChange,
-                strokeSliderValue = strokeSliderValue,
-                onStrokeSliderValueChange = onStrokeSliderValueChange,
+                fillColors = fillColors,
+                selectedFillColor = selectedFillColor,
+                onFillColorChange = onFillColorChange,
+                strokeWidthSliderValue = strokeWidthSliderValue,
+                onStrokeWidthSliderValueChange = onStrokeWidthSliderValueChange,
                 opacitySliderValue = opacitySliderValue,
-                onOpacitySliderValueChange = onOpacitySliderValueChange
+                onOpacitySliderValueChange = onOpacitySliderValueChange,
+                onColorPaletteIconClick = onColorPaletteIconClick
             )
         }
     }
@@ -146,13 +151,14 @@ private fun CommandPaletteContent(
     strokeColors: List<Color>,
     selectedStrokeColor: Color,
     onStrokeColorChange: (Color) -> Unit,
-    backgroundColors: List<Color>,
-    selectedBackgroundColor: Color,
-    onBackgroundColorChange: (Color) -> Unit,
-    strokeSliderValue: Float,
-    onStrokeSliderValueChange: (Float) -> Unit,
+    fillColors: List<Color>,
+    selectedFillColor: Color,
+    onFillColorChange: (Color) -> Unit,
+    strokeWidthSliderValue: Float,
+    onStrokeWidthSliderValueChange: (Float) -> Unit,
     opacitySliderValue: Float,
     onOpacitySliderValueChange: (Float) -> Unit,
+    onColorPaletteIconClick: (ColorPaletteType) -> Unit
 ) {
     val updatedCanvasColors = listOf(Color.White) + canvasColors
     val updatedStrokeColors = listOf(Color.Black) + strokeColors
@@ -179,7 +185,7 @@ private fun CommandPaletteContent(
             colors = updatedCanvasColors,
             selectedColor = selectedCanvasColor,
             onColorChange = onCanvasColorChange,
-            onColorPaletteClick = {}
+            onColorPaletteClick = { onColorPaletteIconClick(ColorPaletteType.CANVAS) }
         )
         Spacer(modifier = Modifier.height(20.dp))
         ColorSection(
@@ -187,35 +193,36 @@ private fun CommandPaletteContent(
             colors = updatedStrokeColors,
             selectedColor = selectedStrokeColor,
             onColorChange = onStrokeColorChange,
-            onColorPaletteClick = {}
+            onColorPaletteClick = { onColorPaletteIconClick(ColorPaletteType.STROKE) }
         )
-        when(selectedDrawingTool) {
+        when (selectedDrawingTool) {
             DrawingTool.RECTANGLE, DrawingTool.CIRCLE, DrawingTool.TRIANGLE -> {
                 Spacer(modifier = Modifier.height(20.dp))
                 ColorSection(
-                    sectionTitle = "Background",
-                    colors = backgroundColors,
-                    isBackgroundColors = true,
-                    selectedColor = selectedBackgroundColor,
-                    onColorChange = onBackgroundColorChange,
-                    onColorPaletteClick = {}
+                    sectionTitle = "Fill",
+                    colors = fillColors,
+                    isFillColorsSection = true,
+                    selectedColor = selectedFillColor,
+                    onColorChange = onFillColorChange,
+                    onColorPaletteClick = { onColorPaletteIconClick(ColorPaletteType.FILL) }
                 )
             }
+
             else -> Unit
         }
         Spacer(modifier = Modifier.height(20.dp))
         SliderSection(
             sectionTitle = "Stroke Width",
             sliderValueRange = 1f..25f,
-            sliderValue = strokeSliderValue,
-            onSliderValueChange =  onStrokeSliderValueChange
+            sliderValue = strokeWidthSliderValue,
+            onSliderValueChange = onStrokeWidthSliderValueChange
         )
         Spacer(modifier = Modifier.height(15.dp))
         SliderSection(
             sectionTitle = "Opacity",
             sliderValueRange = 1f..100f,
             sliderValue = opacitySliderValue,
-            onSliderValueChange =  onOpacitySliderValueChange
+            onSliderValueChange = onOpacitySliderValueChange
         )
     }
 }
@@ -223,7 +230,7 @@ private fun CommandPaletteContent(
 @Composable
 private fun ColorSection(
     sectionTitle: String,
-    isBackgroundColors: Boolean = false,
+    isFillColorsSection: Boolean = false,
     colors: List<Color>,
     selectedColor: Color,
     onColorChange: (Color) -> Unit,
@@ -239,7 +246,7 @@ private fun ColorSection(
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (isBackgroundColors) {
+            if (isFillColorsSection) {
                 item {
                     Icon(
                         modifier = Modifier

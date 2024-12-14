@@ -41,6 +41,7 @@ import org.synac.whiteboard.presentation.theme.defaultDrawingColors
 import org.synac.whiteboard.presentation.util.UiType
 import org.synac.whiteboard.presentation.util.getUiType
 import org.synac.whiteboard.presentation.util.rememberScreenSizeSize
+import org.synac.whiteboard.presentation.whiteboard.component.ColorSelectionDialog
 import org.synac.whiteboard.presentation.whiteboard.component.CommandPaletteCard
 import org.synac.whiteboard.presentation.whiteboard.component.CommandPaletteDrawerContent
 import org.synac.whiteboard.presentation.whiteboard.component.DrawingToolFAB
@@ -65,6 +66,12 @@ fun WhiteboardScreen(
 
     var isCommandPaletteOpen by rememberSaveable { mutableStateOf(false) }
 
+    ColorSelectionDialog(
+        isOpen = state.isColorSelectionDialogOpen,
+        onColorSelected = { onEvent(WhiteboardEvent.OnColorSelected(it)) },
+        onDismiss = { onEvent(WhiteboardEvent.ColorSelectionDialogDismiss) }
+    )
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
@@ -78,26 +85,29 @@ fun WhiteboardScreen(
                             selectedDrawingTool = state.selectedDrawingTool,
                             canvasColors = defaultCanvasColors,
                             selectedCanvasColor = state.canvasColor,
-                            onCanvasColorChange = {onEvent(WhiteboardEvent.CanvasColorChange(it))},
+                            onCanvasColorChange = { onEvent(WhiteboardEvent.CanvasColorChange(it)) },
                             strokeColors = defaultDrawingColors,
                             selectedStrokeColor = state.strokeColor,
                             onStrokeColorChange = { onEvent(WhiteboardEvent.StrokeColorChange(it)) },
-                            backgroundColors = defaultDrawingColors,
-                            selectedBackgroundColor = state.backgroundColor,
-                            onBackgroundColorChange = {
+                            fillColors = defaultDrawingColors,
+                            selectedFillColor = state.fillColor,
+                            onFillColorChange = {
                                 onEvent(
-                                    WhiteboardEvent.BackgroundColorChange(
+                                    WhiteboardEvent.FillColorChange(
                                         it
                                     )
                                 )
                             },
-                            strokeSliderValue = state.strokeWidth,
-                            onStrokeSliderValueChange = {
+                            strokeWidthSliderValue = state.strokeWidth,
+                            onStrokeWidthSliderValueChange = {
                                 onEvent(WhiteboardEvent.StrokeSliderValueChange(it))
                             },
                             opacitySliderValue = state.opacity,
                             onOpacitySliderValueChange = {
                                 onEvent(WhiteboardEvent.OpacitySliderValueChange(it))
+                            },
+                            onColorPaletteIconClick = {
+                                onEvent(WhiteboardEvent.OnColorPaletteIconClick(it))
                             }
                         )
                     },
@@ -161,20 +171,23 @@ fun WhiteboardScreen(
                         selectedDrawingTool = state.selectedDrawingTool,
                         canvasColors = defaultCanvasColors,
                         selectedCanvasColor = state.canvasColor,
-                        onCanvasColorChange = {onEvent(WhiteboardEvent.CanvasColorChange(it))},
+                        onCanvasColorChange = { onEvent(WhiteboardEvent.CanvasColorChange(it)) },
                         strokeColors = defaultDrawingColors,
                         selectedStrokeColor = state.strokeColor,
                         onStrokeColorChange = { onEvent(WhiteboardEvent.StrokeColorChange(it)) },
-                        backgroundColors = defaultDrawingColors,
-                        selectedBackgroundColor = state.backgroundColor,
-                        onBackgroundColorChange = { onEvent(WhiteboardEvent.BackgroundColorChange(it)) },
-                        strokeSliderValue = state.strokeWidth,
-                        onStrokeSliderValueChange = {
+                        fillColors = defaultDrawingColors,
+                        selectedFillColor = state.fillColor,
+                        onFillColorChange = { onEvent(WhiteboardEvent.FillColorChange(it)) },
+                        strokeWidthSliderValue = state.strokeWidth,
+                        onStrokeWidthSliderValueChange = {
                             onEvent(WhiteboardEvent.StrokeSliderValueChange(it))
                         },
                         opacitySliderValue = state.opacity,
                         onOpacitySliderValueChange = {
                             onEvent(WhiteboardEvent.OpacitySliderValueChange(it))
+                        },
+                        onColorPaletteIconClick = {
+                            onEvent(WhiteboardEvent.OnColorPaletteIconClick(it))
                         }
                     )
                 }
@@ -242,7 +255,7 @@ private fun DrawingCanvas(
 private fun DrawScope.drawCustomPath(path: DrawnPath) {
     val pathOpacity = path.opacity / 100
 
-    when (path.backgroundColor) {
+    when (path.fillColor) {
         Color.Transparent -> {
             drawPath(
                 path = path.path,
@@ -254,7 +267,7 @@ private fun DrawScope.drawCustomPath(path: DrawnPath) {
         else -> {
             drawPath(
                 path = path.path,
-                color = path.backgroundColor.copy(alpha = pathOpacity),
+                color = path.fillColor.copy(alpha = pathOpacity),
                 style = Fill
             )
         }
