@@ -12,6 +12,7 @@ import androidx.navigation.toRoute
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -24,6 +25,7 @@ import org.synac.whiteboard.domain.model.DrawingTool
 import org.synac.whiteboard.domain.model.DrawnPath
 import org.synac.whiteboard.domain.model.Whiteboard
 import org.synac.whiteboard.domain.repository.PathRepository
+import org.synac.whiteboard.domain.repository.SettingsRepository
 import org.synac.whiteboard.domain.repository.WhiteboardRepository
 import org.synac.whiteboard.presentation.navigation.Routes
 import kotlin.math.abs
@@ -31,6 +33,7 @@ import kotlin.math.abs
 class WhiteboardViewModel(
     private val pathRepository: PathRepository,
     private val whiteboardRepository: WhiteboardRepository,
+    private val settingsRepository: SettingsRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -40,7 +43,18 @@ class WhiteboardViewModel(
     private var updatedWhiteboardId = MutableStateFlow(whiteboardId)
 
     private val _state = MutableStateFlow(WhiteboardState())
-    val state = _state.stateIn(
+    val state = combine(
+        _state,
+        settingsRepository.getPreferredStrokeColors(),
+        settingsRepository.getPreferredFillColors(),
+        settingsRepository.getPreferredCanvasColors(),
+    ){ state, prefStrokeColors, prefFillColors, prefCanvasColors ->
+        state.copy(
+            preferredStrokeColors = prefStrokeColors,
+            preferredFillColors = prefFillColors,
+            preferredCanvasColors = prefCanvasColors
+        )
+    }.stateIn(
         scope = viewModelScope,
         started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
         initialValue = WhiteboardState()
@@ -159,18 +173,29 @@ class WhiteboardViewModel(
             is WhiteboardEvent.OnColorSelected -> {
                 val state = state.value
                 val color = event.color
-                when(state.selectedColorPaletteType) {
+                val updatedColors = addColorToPreferredList(
+                    newColor = color,
+                    colors = when (state.selectedColorPaletteType) {
+                        ColorPaletteType.CANVAS -> state.preferredCanvasColors
+                        ColorPaletteType.STROKE -> state.preferredStrokeColors
+                        ColorPaletteType.FILL -> state.preferredFillColors
+                    }
+                )
+                when (state.selectedColorPaletteType) {
                     ColorPaletteType.CANVAS -> {
                         _state.update { it.copy(canvasColor = color) }
                         upsertWhiteboard()
                     }
+
                     ColorPaletteType.STROKE -> {
                         _state.update { it.copy(strokeColor = color) }
                     }
+
                     ColorPaletteType.FILL -> {
                         _state.update { it.copy(fillColor = color) }
                     }
                 }
+                savePreferredColors(updatedColors, state.selectedColorPaletteType)
             }
         }
     }
@@ -227,6 +252,15 @@ class WhiteboardViewModel(
                 .collectLatest { paths ->
                     _state.update { it.copy(paths = paths) }
                 }
+        }
+    }
+
+    private fun savePreferredColors(
+        colors: List<Color>,
+        colorPaletteType: ColorPaletteType
+    ) {
+        viewModelScope.launch {
+            settingsRepository.savePreferredColors(colors, colorPaletteType)
         }
     }
 
@@ -345,6 +379,13 @@ class WhiteboardViewModel(
             }
         }
         _state.update { it.copy(pathsToBeDeleted = pathsToBeDeleted) }
+    }
+
+    private fun addColorToPreferredList(
+        newColor: Color,
+        colors: List<Color>
+    ): List<Color> {
+        return listOf(newColor) + colors.filter { it != newColor }.take(n = 3)
     }
 }
 
